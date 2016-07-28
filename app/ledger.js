@@ -778,14 +778,14 @@ var handleGeneralCommunication = (event) => {
 
   if (returnValue._internal.reconcileStamp) {
     if (returnValue._internal.reconcileDelay) {
-      returnValue.statusText = 'Monthly publisher submission in progress, estimated completion in ' +
+      returnValue.statusText = 'Publisher submission in progress, estimated completion in ' +
                                moment(returnValue._internal.reconcileDelay).fromNow() + '.'
     } else {
       offset = moment(returnValue._internal.reconcileStamp).fromNow()
       if (returnValue._internal.reconcileStamp > now) {
         returnValue.statusText = 'Publishers love you! Next submission ' + offset + '.'
       } else {
-        returnValue.statusText = 'Monthly publisher submission overdue ' + offset + '. Please add funds.'
+        returnValue.statusText = 'Publisher submission overdue ' + offset + '. Please add funds.'
       }
     }
   }
