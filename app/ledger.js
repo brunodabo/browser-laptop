@@ -242,7 +242,7 @@ var callback = (err, result, delayTime) => {
 
 var roundtrip = (params, options, callback) => {
   var parts = underscore.extend(underscore.pick(options.server, [ 'protocol', 'hostname', 'port' ]),
-                                underscore.omit(params, [ 'headers', 'payload' ]))
+                                underscore.omit(params, [ 'headers', 'payload', 'timeout' ]))
   var i = parts.path.indexOf('?')
 
   if (i !== -1) {
@@ -624,7 +624,7 @@ var cacheRuleSet = (ruleset) => {
 
     if (util.isArray(tree)) {
       result = []
-      tree.forEach(function (branch) { result.push(prune(branch)) })
+      tree.forEach((branch) => { result.push(prune(branch)) })
       return result
     }
 
@@ -632,7 +632,7 @@ var cacheRuleSet = (ruleset) => {
 
     tree = underscore.omit(tree, [ 'start', 'end', 'raw' ])
     result = {}
-    underscore.keys(tree).forEach(function (key) { result[key] = prune(tree[key]) })
+    underscore.keys(tree).forEach((key) => { result[key] = prune(tree[key]) })
     return result
   }
 
