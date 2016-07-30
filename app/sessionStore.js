@@ -18,6 +18,7 @@ const app = electron.app
 const UpdateStatus = require('../js/constants/updateStatus')
 const settings = require('../js/constants/settings')
 const downloadStates = require('../js/constants/downloadStates')
+const {tabFromFrame} = require('../js/state/frameStateUtil')
 const sessionStorageVersion = 1
 const filtering = require('./filtering')
 
@@ -53,6 +54,9 @@ module.exports.saveAppState = (payload, isShutdown) => {
       payload.perWindowState.forEach((wndPayload) => {
         wndPayload.frames = wndPayload.frames.filter((frame) => !frame.isPrivate)
       })
+      payload.perWindowState.forEach((wndPayload) => {
+        wndPayload.tabs = wndPayload.tabs.filter((tab) => !tab.isPrivate)
+      })
     } else {
       delete payload.perWindowState
     }
@@ -63,6 +67,7 @@ module.exports.saveAppState = (payload, isShutdown) => {
     } catch (e) {
       payload.cleanedOnShutdown = false
     }
+    payload.lastAppVersion = app.getVersion()
 
     const epochTimestamp = (new Date()).getTime().toString()
     const tmpStoragePath = process.env.NODE_ENV !== 'test'
@@ -182,6 +187,12 @@ module.exports.cleanPerWindowData = (perWindowData) => {
       }
     }
   }
+  const cleanTab = (tab) => {
+    // Do not show the audio indicator until audio starts playing
+    delete tab.audioMuted
+    delete tab.audioPlaybackActive
+    delete tab.loading
+  }
 
   // Clean closed frame data before frames because the keys are re-ordered
   // and the new next key is calculated in windowStore.js based on
@@ -194,6 +205,15 @@ module.exports.cleanPerWindowData = (perWindowData) => {
     perWindowData.frames = perWindowData.frames
       .filter((frame) => !frame.pinnedLocation)
     perWindowData.frames.forEach(cleanFrame)
+  }
+  if (perWindowData.frames && !perWindowData.tabs) {
+    perWindowData.tabs = perWindowData.frames.map(frame => tabFromFrame(frame))
+  }
+  if (perWindowData.tabs) {
+    // Don't restore pinned locations because they will be auto created by the app state change event
+    perWindowData.tabs = perWindowData.tabs
+      .filter((tab) => !tab.pinnedLocation)
+    perWindowData.tabs.forEach(cleanTab)
   }
 }
 
@@ -300,7 +320,7 @@ module.exports.loadAppState = () => {
       return
     }
     // Clean app data here if it wasn't cleared on shutdown
-    if (data.cleanedOnShutdown !== true) {
+    if (data.cleanedOnShutdown !== true || data.lastAppVersion !== app.getVersion()) {
       module.exports.cleanAppData(data, false)
     }
     data.cleanedOnShutdown = false
